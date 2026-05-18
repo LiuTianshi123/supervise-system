@@ -1,0 +1,47 @@
+supervise:
+  advance-minutes: 10
+  send-timeout-seconds: 30
+  python-exec-path: python
+  python-script-path: src/main/python/wechat_sender.py
+  message-template: "你好{学员姓名}同学，您的{课程名称}将于今天的{时}点{分}分开始，请您及时到中公网校app中进行学习。课程链接：{链接}，去企业微信里进行督学"
+
+jwt:
+  secret: Z3d4e5f6h7i8j9k0l1m2n3o4p5q6r7s8t9u0v1w2x3y4z5a6b7c8d9e0f1g2h3i4  # 至少64字符
+  expiration-hours: 24
+
+spring:
+  datasource:
+    url: jdbc:sqlite:data/supervise.db
+    driver-class-name: org.sqlite.JDBC
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+  quartz:
+    job-store-type: memory
+    auto-startup: true
+    properties:
+      org:
+        quartz:
+          scheduler:
+            instanceName: SuperviseScheduler
+            instanceId: AUTO
+          threadPool:
+            threadCount: 5
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  port: 8080
+  address: 127.0.0.1
+
+logging:
+  level:
+    com.zgwx.supervise: INFO
+    org.quartz: WARN
