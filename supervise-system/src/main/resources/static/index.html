@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中公网校督学系统</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/css/app.css" rel="stylesheet">
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <nav class="navbar navbar-dark bg-primary">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="bi bi-mortarboard-fill"></i> 中公网校督学系统
+            </span>
+            <div class="d-flex align-items-center gap-3" id="navUserArea">
+                <!-- 登录后显示用户名+角色 -->
+                <span class="text-white small" id="navUsername"></span>
+                <span class="badge bg-warning text-dark" id="navRoleBadge" style="display:none;"></span>
+                <button class="btn btn-sm btn-outline-light" onclick="logout()" id="btnLogout" style="display:none;">
+                    <i class="bi bi-box-arrow-right"></i> 退出
+                </button>
+                <!-- 未登录时 -->
+                <a href="/login.html" class="btn btn-sm btn-light" id="btnLogin">
+                    <i class="bi bi-box-arrow-in-right"></i> 登录
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <div class="container-fluid mt-4">
+
+        <!-- 标签页导航 -->
+        <ul class="nav nav-tabs mb-3" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab-import" data-bs-toggle="tab" data-bs-target="#panel-import" type="button">
+                    <i class="bi bi-file-earmark-arrow-up"></i> 导入课表
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-tasks" data-bs-toggle="tab" data-bs-target="#panel-tasks" type="button">
+                    <i class="bi bi-list-check"></i> 任务看板
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-records" data-bs-toggle="tab" data-bs-target="#panel-records" type="button">
+                    <i class="bi bi-journal-text"></i> 发送记录
+                </button>
+            </li>
+            <li class="nav-item" role="presentation" id="tab-admin-wrap" style="display:none;">
+                <button class="nav-link" id="tab-admin" data-bs-toggle="tab" data-bs-target="#panel-admin" type="button">
+                    <i class="bi bi-people"></i> 用户管理
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-config" data-bs-toggle="tab" data-bs-target="#panel-config" type="button">
+                    <i class="bi bi-gear"></i> 系统配置
+                </button>
+            </li>
+        </ul>
+
+        <!-- 标签页内容 -->
+        <div class="tab-content" id="mainTabContent">
+
+            <!-- ===== 导入课表 ===== -->
+            <div class="tab-pane fade show active" id="panel-import" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-upload"></i> 上传课表</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- 导入方式切换 -->
+                        <ul class="nav nav-pills mb-3" id="importMode">
+                            <li class="nav-item">
+                                <button class="nav-link active" id="mode-file-btn" data-bs-toggle="pill" data-bs-target="#mode-file" type="button">
+                                    <i class="bi bi-file-earmark-excel"></i> 单文件上传
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" id="mode-folder-btn" data-bs-toggle="pill" data-bs-target="#mode-folder" type="button">
+                                    <i class="bi bi-folder2-open"></i> 文件夹批量导入
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content">
+                            <!-- 单文件模式 -->
+                            <div class="tab-pane fade show active" id="mode-file">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="mb-3">
+                                            <label class="form-label">选择Excel文件（.xlsx）</label>
+                                            <input type="file" class="form-control" id="excelFile" accept=".xlsx">
+                                            <div class="form-text">支持8列表格：学员姓名、学员群名称、授课时间、星期、时间段、课程名称、课程链接、督学话术</div>
+                                        </div>
+                                        <button class="btn btn-primary" id="btnUpload" onclick="uploadSchedule()">
+                                            <i class="bi bi-upload"></i> 解析并导入
+                                        </button>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="alert alert-info mb-0">
+                                            <strong><i class="bi bi-info-circle"></i> 导入说明</strong>
+                                            <ul class="mb-0 mt-2 small">
+                                                <li>支持 .xlsx 格式</li>
+                                                <li>第1行为表头，数据从第2行开始</li>
+                                                <li>授课时间格式：2026-05-18</li>
+                                                <li>时间段格式：18:00-18:55</li>
+                                                <li>H列督学话术可自定义，可留空</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 文件夹模式 -->
+                            <div class="tab-pane fade" id="mode-folder">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="mb-3">
+                                            <label class="form-label">服务器文件夹路径</label>
+                                            <input type="text" class="form-control" id="folderPath"
+                                                   placeholder="例：C:\course_excel 或 /home/user/course_excel">
+                                            <div class="form-text">填写服务器上存放 Excel 文件的文件夹路径，将批量解析其中所有 .xlsx / .xls 文件</div>
+                                        </div>
+                                        <button class="btn btn-success" onclick="importFolder()">
+                                            <i class="bi bi-folder2-open"></i> 批量导入
+                                        </button>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="alert alert-warning mb-0">
+                                            <strong><i class="bi bi-exclamation-triangle"></i> 注意事项</strong>
+                                            <ul class="mb-0 mt-2 small">
+                                                <li>路径为<strong>服务器本地路径</strong></li>
+                                                <li>自动扫描 .xlsx / .xls 文件</li>
+                                                <li>每个文件独立统计错误</li>
+                                                <li>所有文件使用同一 batchId</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 导入结果 -->
+                <div class="card mt-3" id="importResultCard" style="display:none;">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-check-circle text-success"></i> 导入结果</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h4 class="mb-0" id="resultTotal">0</h4>
+                                        <small class="text-muted">总行数</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-success bg-opacity-10">
+                                    <div class="card-body text-center">
+                                        <h4 class="mb-0 text-success" id="resultSuccess">0</h4>
+                                        <small class="text-muted">成功</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-danger bg-opacity-10">
+                                    <div class="card-body text-center">
+                                        <h4 class="mb-0 text-danger" id="resultError">0</h4>
+                                        <small class="text-muted">失败</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-info bg-opacity-10">
+                                    <div class="card-body text-center">
+                                        <h4 class="mb-0" id="resultBatch">-</h4>
+                                        <small class="text-muted">批次ID</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 文件夹模式：每文件明细 -->
+                        <div id="fileResults" style="display:none;" class="mb-3">
+                            <h6 class="text-primary"><i class="bi bi-folder2-open"></i> 文件导入明细</h6>
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-light">
+                                    <tr><th>文件名</th><th>总行数</th><th>成功</th><th>失败</th><th>状态</th></tr>
+                                </thead>
+                                <tbody id="fileResultsBody"></tbody>
+                            </table>
+                        </div>
+
+                        <!-- 错误列表 -->
+                        <div id="errorList" style="display:none;">
+                            <h6 class="text-danger"><i class="bi bi-exclamation-triangle"></i> 错误详情</h6>
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr><th>#</th><th>行号</th><th>错误原因</th></tr>
+                                </thead>
+                                <tbody id="errorTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== 任务看板 ===== -->
+            <div class="tab-pane fade" id="panel-tasks" role="tabpanel">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-list-check"></i> 发送任务</h5>
+                        <div>
+                            <select class="form-select form-select-sm d-inline-block w-auto me-2" id="taskStatusFilter" onchange="loadTasks()">
+                                <option value="">全部状态</option>
+                                <option value="PENDING">待发</option>
+                                <option value="PROCESSING">发送中</option>
+                                <option value="SUCCESS">成功</option>
+                                <option value="FAILED">失败</option>
+                            </select>
+                            <button class="btn btn-sm btn-outline-primary" onclick="loadTasks()">
+                                <i class="bi bi-arrow-clockwise"></i> 刷新
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>序号</th>
+                                        <th>学员</th>
+                                        <th>群聊</th>
+                                        <th>课程</th>
+                                        <th>触发类型</th>
+                                        <th>计划时间</th>
+                                        <th>状态</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="taskTableBody">
+                                    <tr><td colspan="8" class="text-center text-muted py-4">加载中...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== 发送记录 ===== -->
+            <div class="tab-pane fade" id="panel-records" role="tabpanel">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-journal-text"></i> 发送记录</h5>
+                        <div>
+                            <select class="form-select form-select-sm d-inline-block w-auto me-2" id="recordStatusFilter" onchange="loadRecords()">
+                                <option value="">全部状态</option>
+                                <option value="SUCCESS">成功</option>
+                                <option value="FAILED">失败</option>
+                            </select>
+                            <button class="btn btn-sm btn-outline-primary" onclick="loadRecords()">
+                                <i class="bi bi-arrow-clockwise"></i> 刷新
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>序号</th>
+                                        <th>任务ID</th>
+                                        <th>渲染消息</th>
+                                        <th>状态</th>
+                                        <th>发送时间</th>
+                                        <th>错误信息</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recordTableBody">
+                                    <tr><td colspan="7" class="text-center text-muted py-4">加载中...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== 系统配置 ===== -->
+            <div class="tab-pane fade" id="panel-config" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-gear"></i> 系统配置</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="configForm">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">提前提醒分钟数</label>
+                                        <input type="number" class="form-control" id="cfgAdvanceMinutes" min="1" max="60" value="10">
+                                        <div class="form-text">在课程开始前多少分钟发送提前提醒</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">发送超时秒数</label>
+                                        <input type="number" class="form-control" id="cfgSendTimeout" min="10" max="120" value="30">
+                                        <div class="form-text">等待Python脚本执行的最长时间</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Python可执行文件路径</label>
+                                        <input type="text" class="form-control" id="cfgPythonPath" value="python" placeholder="python">
+                                        <div class="form-text">如已配置环境变量，填 "python" 即可</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Python脚本路径</label>
+                                        <input type="text" class="form-control" id="cfgScriptPath" value="src/main/python/wechat_sender.py">
+                                        <div class="form-text">wechat_sender.py 的绝对或相对路径</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">督学话术模板</label>
+                                <textarea class="form-control" id="cfgTemplate" rows="3"></textarea>
+                                <div class="form-text">
+                                    占位符：{学员姓名}、{课程名称}、{时}、{分}、{链接}
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="saveConfig()">
+                                <i class="bi bi-save"></i> 保存配置
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== 用户管理（ADMIN专用） ===== -->
+            <div class="tab-pane fade" id="panel-admin" role="tabpanel">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-people"></i> 用户管理</h5>
+                        <button class="btn btn-sm btn-primary" onclick="showCreateUserModal()">
+                            <i class="bi bi-person-plus"></i> 新建用户
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>序号</th>
+                                        <th>用户名</th>
+                                        <th>昵称</th>
+                                        <th>角色</th>
+                                        <th>状态</th>
+                                        <th>创建时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="userTableBody">
+                                    <tr><td colspan="7" class="text-center text-muted py-4">加载中...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 创建/编辑用户 Modal -->
+    <div class="modal fade" id="userModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userModalTitle"><i class="bi bi-person-plus"></i> 新建用户</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editUserId">
+                    <div class="mb-3">
+                        <label class="form-label">用户名</label>
+                        <input type="text" class="form-control" id="modalUsername" placeholder="登录用户名" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" id="pwdLabel">密码</label>
+                        <input type="password" class="form-control" id="modalPassword" placeholder="至少6位">
+                        <div class="form-text">留空则不修改密码</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">昵称</label>
+                        <input type="text" class="form-control" id="modalNickname" placeholder="显示名称（可选）">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">角色</label>
+                        <select class="form-select" id="modalRole">
+                            <option value="USER">普通用户</option>
+                            <option value="ADMIN">管理员</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">状态</label>
+                        <select class="form-select" id="modalEnabled">
+                            <option value="true">启用</option>
+                            <option value="false">禁用</option>
+                        </select>
+                    </div>
+                    <div class="alert alert-danger py-2" id="modalError" style="display:none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveUser()" id="modalSaveBtn">
+                        <i class="bi bi-check"></i> 保存
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 认证工具 -->
+    <script src="/js/auth.js"></script>
+    <!-- 业务逻辑 -->
+    <script src="/js/app.js"></script>
+</body>
+</html>
