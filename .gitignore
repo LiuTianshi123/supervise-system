@@ -1,0 +1,19 @@
+# Build
+target/
+*.jar
+*.class
+
+# IDE
+.idea/
+*.iml
+
+# Logs
+*.log
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Workbuddy
+.workbuddy/
