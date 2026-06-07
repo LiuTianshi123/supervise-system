@@ -1,29 +1,16 @@
-# Build stage
-FROM maven:3.9.6-eclipse-temurin-17 AS build
+FROM python:3.9-slim
 
 WORKDIR /app
 
-# Copy pom.xml first for dependency caching
-COPY pom.xml .
-RUN mvn dependency:go-offline -B
+# 复制依赖文件
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt -i https://mirrors.tencent.com/pypi/simple
 
-# Copy source code and build
-COPY src ./src
-RUN mvn clean package -DskipTests -B
+# 复制所有文件
+COPY . .
 
-# Runtime stage
-FROM eclipse-temurin:17-jre-jammy
-
-WORKDIR /app
-
-# Create data directory for SQLite
-RUN mkdir -p data
-
-# Copy the built jar from build stage
-COPY --from=build /app/target/supervise-system-1.0.0.jar app.jar
-
-# Expose port
+# 暴露端口（CloudBase 云托管默认用 8080）
 EXPOSE 8080
 
-# Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# 启动命令
+CMD ["sh", "-c", "cd backend && python app.py"]
