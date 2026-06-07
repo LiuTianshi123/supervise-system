@@ -9,8 +9,9 @@ RUN pip install --no-cache-dir -r requirements.txt -i https://mirrors.tencent.co
 # 复制所有文件
 COPY . .
 
-# 暴露端口（CloudBase 云托管默认用 8080）
+# 暴露端口
 EXPOSE 8080
 
-# 启动命令
-CMD ["sh", "-c", "cd backend && python app.py"]
+# 生产环境用 gunicorn 启动
+ENV PORT=8080
+CMD ["sh", "-c", "cd backend && gunicorn -b 0.0.0.0:8080 -w 2 app:app"]
