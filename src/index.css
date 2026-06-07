@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== 全局基础 ===== */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #F2F3F5;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* ===== 自定义滚动条 ===== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: #C9CDD4;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #A0A4AB;
+}
+
+/* ===== 全局动画 ===== */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes pulse-border {
+  0%, 100% { border-color: #EF4444; }
+  50% { border-color: #FF8800; }
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes dialogEnter {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ===== 工具类 ===== */
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out;
+}
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* ===== 选中文字颜色 ===== */
+::selection {
+  background: rgba(37, 99, 235, 0.15);
+  color: inherit;
+}
+
+/* ===== 表格行hover ===== */
+.MuiTableRow-root:hover {
+  background-color: #FAFBFC !important;
+}
+
+/* ===== 对话框动画 ===== */
+.MuiDialog-container {
+  animation: fadeIn 0.2s ease-out;
+}
+.MuiDialog-paper {
+  animation: dialogEnter 0.2s ease-out;
+}
+
+/* ===== 对话框遮罩 ===== */
+.MuiDialog-backdrop {
+  background-color: rgba(0, 0, 0, 0.45) !important;
+}
