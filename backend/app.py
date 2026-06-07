@@ -181,7 +181,7 @@ def list_students():
     page = request.args.get('page', 1, type=int)
     page_size = request.args.get('pageSize', 50, type=int)
     keyword = request.args.get('keyword', '').strip()
-    group_id = request.args.get('groupId', type=int)
+    group_id = request.args.get('groupId', '').strip() or None
 
     user_groups = _get_user_group_ids(request.user)
 
@@ -282,7 +282,7 @@ def all_records():
     page_size = request.args.get('pageSize', 50, type=int)
     date_from = request.args.get('dateFrom', '').strip()
     date_to = request.args.get('dateTo', '').strip()
-    group_id = request.args.get('groupId', type=int)
+    group_id = request.args.get('groupId', '').strip() or None
     status = request.args.get('status', '').strip()
 
     user_groups = _get_user_group_ids(request.user)
