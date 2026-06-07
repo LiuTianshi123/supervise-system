@@ -1,138 +1,98 @@
-# 督学管理系统 - 腾讯云 CloudBase 部署指南
+# 督学管理系统 - 腾讯云 CloudBase 部署指南（方案B）
 
-## 方案说明
+## 改了什么
+- `database.py`：从 SQLite 迁移到 CloudBase NoSQL 数据库（保持函数接口不变）
+- `index.py`：CloudBase 云函数 HTTP 触发器入口（WSGI 适配器）
+- `app.py`：修复 ID 类型（integer → string）
+- `requirements.txt`：添加 `cloudbase` SDK
 
-CloudBase 提供两种部署方式：
-- **云函数（推荐）**：免费额度充足，适合 Flask 应用
-- **云托管**：支持 Docker，更灵活但配置复杂
+## 部署步骤
 
-本指南使用**云函数**方式部署。
-
----
-
-## 第一步：开通 CloudBase
-
+### 第一步：开通腾讯云 CloudBase
 1. 访问：https://console.cloud.tencent.com/tcb
-2. 微信扫码登录（需实名认证）
+2. 微信扫码登录（需实名认证，中国身份证）
 3. 点**「新建环境」**
    - 环境名称：`supervision-env`
-   - 套餐选择：**按需付费（有免费额度）**
-4. 等待环境创建完成（约 1 分钟）
+   - 套餐：**按需付费**（有免费额度，每月 15000 次调用）
+4. 等待环境创建（约 1 分钟）
+5. 记住你的**环境 ID**（格式：`xxx-xxx`）
 
 ---
 
-## 第二步：安装 CloudBase CLI
+### 第二步：安装 CloudBase CLI（本地电脑）
+打开终端（PowerShell/CMD），运行：
 
-在**你的本地电脑**（Windows）打开终端（PowerShell 或 CMD）：
-
-```powershell
-# 安装 Node.js（如果还没有）
-# 访问 https://nodejs.org 下载安装 LTS 版本
-
-# 安装 CloudBase CLI
+```bash
 npm install -g @cloudbase/cli
-
-# 验证安装
-tcb --version
-```
-
----
-
-## 第三步：登录 CloudBase
-
-```powershell
-# 在终端运行，会弹出二维码，微信扫码登录
 tcb login
+# 弹出二维码 → 微信扫码登录
 ```
 
 ---
 
-## 第四步：初始化项目
-
-进入项目目录：
-
-```powershell
-cd C:\Users\49782\WorkBuddy\2026-06-03-14-04-31\supervision-system
-
-# 初始化 CloudBase 项目
-tcb init
-# - 选择环境：选择你刚创建的环境
-# - 选择语言：Python
+### 第三步：下载代码并配置
+```bash
+git clone https://github.com/LiuTianshi123/supervise-system.git cloudbase-supervision
+cd cloudbase-supervision
 ```
+
+编辑 `cloudbaserc.json`，把 `{{ENV_ID}}` 替换为你的环境 ID。
 
 ---
 
-## 第五步：部署到云端
+### 第四步：部署云函数
+```bash
+cd backend
+pip install cloudbase -t .
+cd ..
 
-```powershell
-# 部署云函数
 tcb fn deploy supervision-system -e <你的环境ID>
-
-# 或者一键部署所有函数（根据 cloudbaserc.json）
-tcb fn deploy -e <你的环境ID>
 ```
 
 ---
 
-## 第六步：配置 HTTP 访问
-
-1. 登录腾讯云控制台：https://console.cloud.tencent.com/tcb
-2. 进入你的环境 → **「云函数」**
-3. 找到 `supervision-system` 函数
-4. 点**「触发管理」** → **「创建触发器」**
+### 第五步：配置 HTTP 访问
+1. 登录 CloudBase 控制台：https://console.cloud.tencent.com/tcb
+2. 进入你的环境 → **云函数**
+3. 点击 `supervision-system` → **触发方式**
+4. 如果还没有 HTTP 触发器，点**创建触发器**：
    - 触发方式：**HTTP 触发器**
-   - auth 鉴权：**免鉴权**（让所有人能访问）
-5. 保存后会得到一个 URL，类似：
-   ```
-   https://<环境ID>.service.tcloudbase.com/supervision-system
-   ```
+   - 鉴权方式：**免鉴权**
+5. 复制触发器提供的 URL
 
 ---
 
-## 第七步：访问系统
-
-用浏览器打开上一步得到的 URL，应该能看到登录页面。
-
-默认账号：`admin` / `admin123`
-
----
-
-## 常见问题
-
-### 部署后访问 404
-检查 `cloudbaserc.json` 中的 `handler` 字段是否正确指向 `index.main_handler`。
-
-### 静态文件丢失
-CloudBase 云函数不直接支持静态文件服务，需要：
-1. 使用 CloudBase **静态网站托管** 功能
-2. 或者将静态文件上传到**云存储**
-
-**推荐方案**：将 `backend/static/` 目录上传到 CloudBase 静态托管：
-
-```powershell
-tcb hosting deploy backend/static -e <环境ID>
+### 第六步：部署前端静态文件
+```bash
+# 上传静态文件到 CloudBase 静态托管
+tcb hosting deploy backend/static -e <你的环境ID>
 ```
 
----
-
-## 免费额度说明
-
-| 资源 | 免费额度 |
-|------|---------|
-| 云函数调用次数 | 每月 20 万次 |
-| 云函数资源用量 | 每月 40 万 GBs |
-| 静态托管流量 | 每月 5 GB |
-| 数据库容量 | 2 GB |
-
-完全够用！
+然后在 CloudBase 控制台的**静态网站托管**中找到前端访问地址。
 
 ---
 
-## 下一步
+### 第七步：访问系统
+打开 CloudBase 提供的 URL → 看到登录页面
+- 账号：`admin`
+- 密码：`admin123`
 
-部署成功后：
-1. 修改默认管理员密码
-2. 配置 `wecom-sender` 连接云端 URL
-3. 邀请其他人通过公网 URL 访问
+---
 
-如有问题，查看 CloudBase 控制台 → **「日志」** 中的错误信息。
+## 免费额度
+| 资源 | 免费额度/月 |
+|------|-----------|
+| 云函数调用次数 | 15000 次 |
+| 云函数资源 | 40000 GBs |
+| 数据库读操作 | 50000 次 |
+| 数据库写操作 | 30000 次 |
+| 静态托管流量 | 5 GB |
+
+正常使用完全足够。
+
+---
+
+## 注意
+- CloudBase 云函数有**冷启动延迟**（首次访问约 1-3 秒）
+- 数据库是 NoSQL，不支持复杂 JOIN 查询（已在代码中处理）
+- 定期检查数据库容量（免费 2GB）
